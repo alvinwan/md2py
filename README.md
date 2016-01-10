@@ -6,8 +6,8 @@ to navigate a markdown file as a document structure.
 ## Usage
 
 Markdown2Python offers only one function `md2py`, which generates a Python
-object from markdown text. It additionally parses the markdwon file to
-generate a "Tree of Contents," navigable Python object.
+object from markdown text. This object is a navigable, "Tree of Contents"
+abstraction for the markdown file.
 
 Take, for example, the following markdown file.
 
@@ -66,9 +66,9 @@ The main `h1` has two `h2`s beneath it. We can access both.
 Chapter 1 : Chikin Fly
 ```
 
-In total, there are three `h3`s in this document. However, only one `h3` is
-actually nested below the `h2` 'Chapter 1 : Chikin Fly'. `md2py` parses this
-document correctly to bely this relationship.
+In total, there are 3 `h3`s in this document. However, only 1 `h3` is
+actually nested within 'Chapter 1 : Chikin Fly' (accessible via `toc.h1.h2`).
+As a result, `toc.h1.h2.h3s` will only show one `h3`s.
 
 ```
 >>> list(toc.h1.h2.h3s)
@@ -76,17 +76,14 @@ document correctly to bely this relationship.
 ```
 
 The `TreeOfContents` class also has a few more conveniences defined. Among them
-is support for indexing. Here are two uses for indices.
+is support for indexing. To access the `i`th child of an `<element>` - instead of `<element>.branches[i]` - use `<element>[i]`.
 
-1. Accessing the `i`th element: Instead of `list(toc.<elem>)[i]`, simply use
-`toc.<elem>s[i]`.
-2. Accessing the `i`th child of an element: Instead of
-`<elem>.branches[i]`, use `<elem>[i]`.
+See below for example usage.
 
 ```
->>> list(toc.h1.h2s)[1] == toc.h1[1]
-True
 >>> toc.h1.branches[0] == toc.h1[0] == toc.h1.h2
+True
+>>> list(toc.h1.h2s)[1] == toc.h1[1]
 True
 >>> toc.h1[1]
 Chapter 2 : Chikin Scream
