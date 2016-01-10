@@ -76,10 +76,8 @@ class TreeOfContents:
         :param list branches: list of immediate children as TreeOfContents objs
         :return: list of all descendants
         """
-        descendants = [b.source for b in branches]
-        for branch in branches:
-            descendants.extend(branch.descendants())
-        return descendants
+        return sum([b.descendants() for b in branches], []) + \
+            [b.source for b in branches]
 
     def parseBranches(self, descendants):
         """
@@ -88,25 +86,16 @@ class TreeOfContents:
         :param list elements: list of source objects
         :return: list of filtered TreeOfContents objects
         """
-        # print(descendants)
-        iterator, branches, parent, descendants = iter(descendants), [], None,[]
-        sameDepth = lambda branch: self.getHeadingLevel(branch) == self.depth
-        make = lambda value, src, **kwargs:TOC(
-            value, source=src, depth=self.depth+1, **kwargs)
-        for branch in filter(lambda s: s.string and s.string.strip(), iterator):
-            if sameDepth(branch):
-                if parent:
-                    branches.append(make(parent.string, parent,
-                        descendants=descendants))
-                parent, descendants = branch, []
+        parsed, parent, cond = [], False, lambda b: (b.string or '').strip()
+        for branch in filter(cond, descendants):
+            if self.getHeadingLevel(branch) == self.depth:
+                parsed.append({'root':branch.string, 'source':branch})
+                parent = True
             elif not parent:
-                branches.append(make(branch.string, branch))
+                parsed.append({'root':branch.string, 'source':branch})
             else:
-                descendants.append(branch)
-        if parent:
-            branches.append(make(parent.string, parent,
-                descendants=descendants))
-        return branches
+                parsed[-1].setdefault('descendants', []).append(branch)
+        return [TOC(depth=self.depth+1, **kwargs) for kwargs in parsed]
 
     def __getattr__(self, attr, *default):
         """Check source for attributes"""
