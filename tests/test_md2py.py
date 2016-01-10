@@ -28,7 +28,7 @@ def test_top_level():
     """tests parse for the top level of a markdown string"""
     toc = md2py(chikin)
 
-    assert toc.h1.string == 'Chikin Tales'
+    assert str(toc.h1) == 'Chikin Tales'
     assert len(list(toc.h2s)) == 0
     assert len(list(toc.h3s)) == 0
     assert toc.depth == 1
@@ -38,12 +38,12 @@ def test_top_level2():
     toc = md2py(iscream)
 
     assert toc.h1 is None
-    assert toc.h2.string == 'I Scream'
+    assert str(toc.h2) == 'I Scream'
     assert len(list(toc.h2s)) == 2
     assert toc.depth == 2
 
 def test_indexing():
-    """test indices and """
+    """test indices"""
     toc = md2py(chikin)
 
     assert list(toc.h1.h2s)[1] == toc.h1[1]
@@ -54,5 +54,5 @@ def test_branches_limit():
     toc = md2py(chikin)
 
     assert toc.h1.h2.string == 'Chapter 1 : Chikin Fly'
-    assert tocs2strs(toc.h1.h2.h3s) == ['Waddling']
-    assert tocs2strs(toc.h1[1].h3s) == ['Plopping', 'I Scream']
+    assert list(map(str, toc.h1.h2.h3s)) == ['Waddling']
+    assert list(map(str, toc.h1[1].h3s)) == ['Plopping', 'I Scream']

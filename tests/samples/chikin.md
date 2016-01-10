@@ -11,9 +11,7 @@ Chickens don't fly. They do only the following:
 
 ### Waddling
 
-### Squatting
-
-### Squawking
+## Chapter 2 : Chikin Scream
 
 ### Plopping
 
@@ -22,7 +20,5 @@ Plopping involves three steps:
 1. squawk
 2. plop
 3. repeat, unless ordered to squat
-
-## Chapter 2 : Chikin Scream
 
 ### I Scream
