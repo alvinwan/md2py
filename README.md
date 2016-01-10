@@ -49,8 +49,7 @@ Chikin Tales
 'Chikin Tales'
 ```
 
-Notice that at this level, there are no `h2`s. We can only access one level
-at we descend the tree.
+Notice that at this level, there are no `h2`s.
 
 ```
 >>> list(toc.h2s)
