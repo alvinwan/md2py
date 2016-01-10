@@ -6,8 +6,8 @@ to navigate a markdown file as a document structure.
 ## Usage
 
 Markdown2Python offers only one function `md2py`, which generates a Python
-object from markdown text. This object embeds the markdown file's document
-structure in object form.
+object from markdown text. It additionally parses the markdwon file to
+generate a "Tree of Contents," navigable Python object.
 
 Take, for example, the following markdown file.
 
@@ -32,27 +32,24 @@ Chickens don't fly. They do only the following:
 ### I Scream
 ```
 
-With md2py, we can easily navigate this markdown file using a Python
-"table of contents".
-
-```
->>> obj = md2py(markdown)
->>> obj.h1.string
-'Chikin Tales'
->>> obj.h1.h2
-Chapter 1 : Chikin Fly
->>> list(obj.h1.h2.h3s)
-['Waddling']
->>> list(obj.h1.h2s)[1] == obj.h1[1]
-True
->>> obj.h1[1]
-Chapter 2 : Chikin Scream
->>> list(obj.h1[1].h3s)
-['Plopping', 'I Scream']
-```
-
 Akin to a navigation bar, the md2py object allows you to expand a markdown
 file one level at a time.
+
+```
+>>> toc = md2py(markdown)
+>>> toc.h1.string
+'Chikin Tales'
+>>> toc.h1.h2
+Chapter 1 : Chikin Fly
+>>> list(toc.h1.h2.h3s)
+['Waddling']
+>>> list(toc.h1.h2s)[1] == obj.h1[1]
+True
+>>> toc.h1[1]
+Chapter 2 : Chikin Scream
+>>> list(toc.h1[1].h3s)
+['Plopping', 'I Scream']
+```
 
 ## Installation
 

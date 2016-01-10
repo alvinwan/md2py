@@ -2,8 +2,8 @@ from markdown import markdownFromFile, markdown
 from bs4 import BeautifulSoup
 
 
-class Markdownpy:
-    """abstraction for markdown source"""
+class TreeOfContents:
+    """Tree abstraction for markdown source"""
 
     source_type = BeautifulSoup
     valid_tags = ('a', 'abbr', 'address', 'area', 'article', 'aside', 'audio',
@@ -22,63 +22,91 @@ class Markdownpy:
         'title', 'tr', 'track', 'u', 'ul', 'var', 'video', 'wbr')
     allowed_attrs = ('string', 'name')
 
-    def __init__(self, source, depth=None):
-        assert source is not None, 'NoneType source passed into Markdownpy'
+    def __init__(self, root, branches=(), descendants=(), source=None,
+        depth=None):
+        """
+        Construct TreeOfContents object using source
+
+        :param SourceType source: parsed source
+        :param list TreeOfContents branches: list of direct children
+        :param list SourceType descendants: all descendants
+        """
+        assert source is not None, 'NoneType source passed into TreeOfContents'
         self.source = source
         self.depth = depth or self.parseTopDepth()
-        self.branches = self.parseTopLevel()
+        self.descendants = descendants or self.expandDescendants(branches)
+        self.branches = branches or self.parseBranches(descendants)
 
     @staticmethod
     def getHeadingLevel(bs):
         """
         >>> bsify = lambda html: BeautifulSoup(html, 'html.parser')
         >>> bs = bsify('<h1>Hello</h1>').h1
-        >>> Markdownpy.getHeadingLevel(bs)
+        >>> TOC.getHeadingLevel(bs)
         1
         >>> bs2 = bsify('<p>Hello</p>').p
-        >>> Markdownpy.getHeadingLevel(bs2)
+        >>> TOC.getHeadingLevel(bs2)
 
         >>> bs3 = bsify('<article>Hello</article>').article
-        >>> Markdownpy.getHeadingLevel(bs3)
+        >>> TOC.getHeadingLevel(bs3)
 
         """
-        if not bs.name or len(bs.name) <= 1:
-            return None
-        n = bs.name[1]
         try:
-            return int(n)
-        except ValueError:
+            return int(bs.name[1])
+        except (ValueError, IndexError, TypeError):
             return None
 
     def parseTopDepth(self):
-        """parse highest heading in markdown
+        """
+        Parse highest heading in markdown
 
-        >>> Markdownpy.fromHTML('<h2>haha</h2><h1>hoho</h1>').parseTopDepth()
+        >>> TOC.fromHTML('<h2>haha</h2><h1>hoho</h1>').parseTopDepth()
         1
-        >>> Markdownpy.fromHTML('<h3>haha</h3><h2>hoho</h2>').parseTopDepth()
+        >>> TOC.fromHTML('<h3>haha</h3><h2>hoho</h2>').parseTopDepth()
         2
         """
         for i in range(1, 7):
             if getattr(self.source, 'h%d' % i):
                 return i
 
-    def parseTopLevel(self):
-        """parse top level of markdown"""
-        iterator, children = iter(self.source.children), []
-        sameDepth = lambda child: self.getHeadingLevel(child) == self.depth
-        for child in iterator:
-            children.append(child)
-            if sameDepth(child):
-                break
-        # for child in iterator:
-        #     if sameDepth(child):
-        #         children.append(child)
-        #     else:
-        #         parent = children[-1]
-        #         parent.branches = getattr(parent, 'branches', [])
-        #         parent.branches.append(child)
-        children.extend(filter(sameDepth, iterator))
-        return children
+    def expandDescendants(self, branches):
+        """
+        Expand descendants from list of branches
+
+        :param list branches: list of immediate children as TreeOfContents objs
+        :return: list of all descendants
+        """
+        descendants = [b.source for b in branches]
+        for branch in branches:
+            descendants.extend(branch.descendants())
+        return descendants
+
+    def parseBranches(self, descendants):
+        """
+        Parse top level of markdown
+
+        :param list elements: list of source objects
+        :return: list of filtered TreeOfContents objects
+        """
+        # print(descendants)
+        iterator, branches, parent, descendants = iter(descendants), [], None,[]
+        sameDepth = lambda branch: self.getHeadingLevel(branch) == self.depth
+        make = lambda value, src, **kwargs:TOC(
+            value, source=src, depth=self.depth+1, **kwargs)
+        for branch in filter(lambda s: s.string and s.string.strip(), iterator):
+            if sameDepth(branch):
+                if parent:
+                    branches.append(make(parent.string, parent,
+                        descendants=descendants))
+                parent, descendants = branch, []
+            elif not parent:
+                branches.append(make(branch.string, branch))
+            else:
+                descendants.append(branch)
+        if parent:
+            branches.append(make(parent.string, parent,
+                descendants=descendants))
+        return branches
 
     def __getattr__(self, attr, *default):
         """Check source for attributes"""
@@ -86,17 +114,13 @@ class Markdownpy:
         if attr in self.allowed_attrs:
             return getattr(self.source, attr, *default)
         if attr in self.valid_tags:
-            try:
-                return Markdownpy(next(filter(lambda t: t.name == attr, self.branches)))
-            except StopIteration:
-                return None
+            return next(filter(lambda t: t.name == attr, self.branches), None)
         if len(default):
             return default[0]
         if attr[-1] == 's' and tag in self.valid_tags:
-            condition = lambda t:t.name == tag
-            make = lambda child: Markdownpy(child, depth=self.depth+1)
-            return map(make, filter(condition, self.branches))
-        raise AttributeError("'Markdownpy' object has no attribute '%s'" % attr)
+            condition = lambda t: t.name == tag
+            return filter(condition, self.branches)
+        raise AttributeError("'TreeOfContents' object has no attribute '%s'" % attr)
 
     def __repr__(self):
         """Display contents"""
@@ -119,9 +143,9 @@ class Markdownpy:
         Creates abstraction using path to file
 
         :param str path: path to markdown file
-        :return: Markdownpy object
+        :return: TreeOfContents object
         """
-        return Markdownpy.fromHTML(markdown(md, *args, **kwargs))
+        return TOC.fromHTML(markdown(md, *args, **kwargs))
 
     @staticmethod
     def fromHTML(html, *args, **kwargs):
@@ -129,6 +153,11 @@ class Markdownpy:
         Creates abstraction using HTML
 
         :param str html: HTML
-        :return: Markdownpy object
+        :return: TreeOfContents object
         """
-        return Markdownpy(BeautifulSoup(html, 'html.parser', *args, **kwargs))
+        source = BeautifulSoup(html, 'html.parser', *args, **kwargs)
+        return TOC('[document]',
+            source=source,
+            descendants=source.children)
+
+TOC = TreeOfContents

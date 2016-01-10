@@ -1,4 +1,4 @@
-from .md2py import Markdownpy
+from .md2py import TreeOfContents
 
 
 def md2py(md, *args, **kwargs):
@@ -8,4 +8,4 @@ def md2py(md, *args, **kwargs):
     :param str md: markdown string
     :return: object
     """
-    return Markdownpy.fromMarkdown(md, *args, **kwargs)
+    return TreeOfContents.fromMarkdown(md, *args, **kwargs)
