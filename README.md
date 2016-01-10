@@ -39,7 +39,18 @@ Plopping involves three steps:
 ```
 
 Akin to a navigation bar, the `TreeOfContents` object allows you to expand a
-markdown file one level at a time. At the global level, we can access the title.
+markdown file one level at a time. Running `md2py` on the above markdown file
+will generate a tree, abstracting the below structure.
+
+```
+          Chikin Tales
+          /           \
+    Chapter 1       Chapter 2
+      /               /     \
+  Waddling      Plopping    I Scream
+```
+
+At the global level, we can access the title.
 
 ```
 >>> toc = md2py(markdown)
