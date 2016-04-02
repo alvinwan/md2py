@@ -1,7 +1,9 @@
 # Markdown2Python (md2py)
 
-md2py parses and converts markdown into a usable Python object. This allows you
-to navigate a markdown file as a document structure.
+md2py converts markdown into a Python parse tree. This allows you to 
+navigate a markdown file as a document structure.
+
+See [tex2py](https://github.com/alvinwan/tex2py) for a LaTeX parse tree.
 
 ## Usage
 
